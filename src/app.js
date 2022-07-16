@@ -1,34 +1,16 @@
+require('./mongo')
+
+const Post = require('./models/Post')
 const express = require('express')
 const app = express()
 const cors = require('cors')
+
 
 app.use(cors())
 app.use(express.json())
 
 
-let posts = [
-    {
-        "id": 1,
-        "title": "Banner solo con html y css",
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur venenatis tristique tortor non pellentesque. Curabitur ut est eleifend, ultrices urna maximus, interdum ligula. Mauris tempor libero massa, consectetur efficitur orci pellentesque non. Proin sit amet enim sit amet massa maximus lacinia. Vestibulum accumsan enim elit, id ultricies enim ultricies nec. Donec enim leo, placerat eu quam non, semper pulvinar augue. Donec ut diam accumsan, pharetra diam id, interdum ligula. Vestibulum iaculis auctor suscipit. Nam vestibulum lorem non tempus pellentesque. Curabitur tempor faucibus ante, vitae luctus orci rhoncus tincidunt. Morbi auctor euismod velit sed eleifend. Phasellus id nisi non neque lobortis euismod. Maecenas egestas condimentum erat. Duis vel lectus quis ipsum dapibus laoreet a id risus. Aenean vel ultrices purus",
-        "date": "2022-07-15T03:41:28.389Z",
-        "imgSrc":"https://miro.medium.com/max/1400/1*k7jmNNboDV1eTL51Jnyo2w.jpeg"
-    },
-    {
-        "id": 2,
-        "title": "meno animado solo con javascript",
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur venenatis tristique tortor non pellentesque. Curabitur ut est eleifend, ultrices urna maximus, interdum ligula. Mauris tempor libero massa, consectetur efficitur orci pellentesque non. Proin sit amet enim sit amet massa maximus lacinia. Vestibulum accumsan enim elit, id ultricies enim ultricies nec. Donec enim leo, placerat eu quam non, semper pulvinar augue. Donec ut diam accumsan, pharetra diam id, interdum ligula. Vestibulum iaculis auctor suscipit. Nam vestibulum lorem non tempus pellentesque. Curabitur tempor faucibus ante, vitae luctus orci rhoncus tincidunt. Morbi auctor euismod velit sed eleifend. Phasellus id nisi non neque lobortis euismod. Maecenas egestas condimentum erat. Duis vel lectus quis ipsum dapibus laoreet a id risus. Aenean vel ultrices purus",
-        "date": "2022-07-15T03:43:39.383Z",
-        "imgSrc":"https://miro.medium.com/max/1400/1*k7jmNNboDV1eTL51Jnyo2w.jpeg"
-    },
-    {
-        "id": 3,
-        "title": "entiende el dom a la perfeccion",
-        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur venenatis tristique tortor non pellentesque. Curabitur ut est eleifend, ultrices urna maximus, interdum ligula. Mauris tempor libero massa, consectetur efficitur orci pellentesque non. Proin sit amet enim sit amet massa maximus lacinia. Vestibulum accumsan enim elit, id ultricies enim ultricies nec. Donec enim leo, placerat eu quam non, semper pulvinar augue. Donec ut diam accumsan, pharetra diam id, interdum ligula. Vestibulum iaculis auctor suscipit. Nam vestibulum lorem non tempus pellentesque. Curabitur tempor faucibus ante, vitae luctus orci rhoncus tincidunt. Morbi auctor euismod velit sed eleifend. Phasellus id nisi non neque lobortis euismod. Maecenas egestas condimentum erat. Duis vel lectus quis ipsum dapibus laoreet a id risus. Aenean vel ultrices purus",
-        "date": "2022-07-15T03:43:39.383Z",
-        "imgSrc":"https://miro.medium.com/max/1400/1*k7jmNNboDV1eTL51Jnyo2w.jpeg"
-    }
-]
+let posts = []
 
 const generateId = () => {
     const postsIds = posts.map(n => n.id)
@@ -42,7 +24,9 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/posts', (request, response) => {
-    response.json(posts)
+    Post.find({}).then(posts => {
+    response.json(posts)    
+    })
 })
 
 app.get('/api/posts/:id', (request, response) => {
