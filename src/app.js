@@ -5,14 +5,13 @@ const Post = require("./models/Post");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-
+const notFound = require('./middleware/notFound.js')
+const handleErrors = require('./middleware/handleErrors.js');
 app.use(cors());
 app.use(express.json());
 
-let posts = [];
-
 app.get("/", (request, response) => {
-  response.send("<h1>Hello World!</h1>");
+  response.send("<h1>Bienvenido a mi API de mi blog de programación</h1>");
 });
 
 app.get("/api/posts", (request, response) => {
@@ -26,11 +25,7 @@ app.get("/api/posts/:id", (request, response, next) => {
   // const post = posts.find(note => note.id === id)
   Post.findById(id)
     .then((post) => {
-      if (post) {
-        return response.json(post);
-      } else {
-        response.status(404).end();
-      }
+      return note ? response.json(post) : response.status(404).end()
     })
     .catch((err) => {
       next(err);
@@ -40,7 +35,7 @@ app.get("/api/posts/:id", (request, response, next) => {
 app.delete("/api/posts/:id", (request, response, next) => {
   const { id } = request.params;
   Post.findByIdAndRemove(id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => next(error));
@@ -57,16 +52,15 @@ app.put("/api/posts/:id", (request, response, next) => {
     imgSrc: post.imgSrc,
   };
 
-  Post.findByIdAndUpdate(id, newPostInfo)
+  Post.findByIdAndUpdate(id, newPostInfo, { new: true })
     .then(result => {
       response.status(200).json(result);
     })
     .catch(error => next(error));
 
-  response.status(204).end();
 });
 
-app.post("/api/posts", (request, response) => {
+app.post("/api/posts", (request, response, next) => {
   const post = request.body;
   if (!post.title) {
     return response.status(400).json({
@@ -80,20 +74,11 @@ app.post("/api/posts", (request, response) => {
   });
   newPost.save().then((savedPost) => {
     response.json(savedPost);
-  });
+  }).catch(err => next(err))
 });
 
-app.use((error, request, response, next) => {
-  console.log(error);
-  if (error.name == "CastError") {
-    response.status(400).send({ error: "id use is malformed" });
-  }
-  if (error.name == "TypeError") {
-    response.status(400).send({ error: "an typeerror has happen" });
-  } else {
-    response.status(500).end();
-  }
-});
+app.use(notFound)
+app.use(handleErrors);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
