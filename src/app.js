@@ -14,10 +14,9 @@ app.get("/", (request, response) => {
   response.send("<h1>Bienvenido a mi API de mi blog de programación</h1>");
 });
 
-app.get("/api/posts", (request, response) => {
-  Post.find({}).then((posts) => {
+app.get("/api/posts", async (request, response) => {
+  const posts = await Post.find({})
     response.json(posts);
-  });
 });
 
 app.get("/api/posts/:id", (request, response, next) => {
