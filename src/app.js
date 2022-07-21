@@ -16,7 +16,7 @@ app.get("/", (request, response) => {
 
 app.get("/api/posts", async (request, response) => {
   const posts = await Post.find({})
-    response.json(posts);
+  response.json(posts);
 });
 
 app.get("/api/posts/:id", (request, response, next) => {
@@ -31,15 +31,11 @@ app.get("/api/posts/:id", (request, response, next) => {
     });
 });
 
-app.delete("/api/posts/:id", (request, response, next) => {
+app.delete("/api/posts/:id",async (request, response, next) => {
   const { id } = request.params;
-  Post.findByIdAndRemove(id)
-    .then(() => {
-      response.status(204).end();
-    })
-    .catch((error) => next(error));
-
-  response.status(204).end();
+  Post.findByIdAndDelete(id)
+    .then(() => response.status(204).end())
+    .catch(next)
 });
 
 app.put("/api/posts/:id", (request, response, next) => {
@@ -59,7 +55,7 @@ app.put("/api/posts/:id", (request, response, next) => {
 
 });
 
-app.post("/api/posts", (request, response, next) => {
+app.post("/api/posts", async (request, response, next) => {
   const post = request.body;
   if (!post.title) {
     return response.status(400).json({
@@ -71,16 +67,22 @@ app.post("/api/posts", (request, response, next) => {
     content: post.content,
     date: new Date(),
   });
-  newPost.save().then((savedPost) => {
-    response.json(savedPost);
-  }).catch(err => next(err))
+  // newPost.save().then((savedPost) => {
+  //   response.json(savedPost);
+  // }).catch(err => next(err))
+  try {
+    const savedPost = await newPost.save()
+    response.json(savedPost)
+  } catch(e){
+    next(e);
+  }
 });
 
-app.use(notFound)
+app.use(notFound);
 app.use(handleErrors);
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-module.exports = {app, server}
+module.exports = { app, server }
