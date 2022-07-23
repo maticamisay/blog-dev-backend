@@ -1,15 +1,18 @@
 require("dotenv").config();
 require("./mongo");
 
-const Post = require("./models/Post");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+
 const notFound = require('./middleware/notFound.js')
 const handleErrors = require('./middleware/handleErrors.js');
+const usersRouter = require('./controllers/users')
+console.log('hola');
+const Post = require("./models/Post");
+
 app.use(cors());
 app.use(express.json());
-
 app.get("/", (request, response) => {
   response.send("<h1>Bienvenido a mi API de mi blog de programación</h1>");
 });
@@ -77,6 +80,8 @@ app.post("/api/posts", async (request, response, next) => {
     next(e);
   }
 });
+
+app.use('/api/users', usersRouter)
 
 app.use(notFound);
 app.use(handleErrors);
