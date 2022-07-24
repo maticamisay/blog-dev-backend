@@ -8,7 +8,6 @@ const cors = require("cors");
 const notFound = require('./middleware/notFound.js')
 const handleErrors = require('./middleware/handleErrors.js');
 const usersRouter = require('./controllers/users')
-console.log('hola');
 const Post = require("./models/Post");
 
 app.use(cors());
