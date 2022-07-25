@@ -9,6 +9,7 @@ const notFound = require('./middleware/notFound.js')
 const handleErrors = require('./middleware/handleErrors.js');
 const usersRouter = require('./controllers/users')
 const Post = require("./models/Post");
+const User = require("./models/User");
 
 app.use(cors());
 app.use(express.json());
@@ -58,15 +59,20 @@ app.put("/api/posts/:id", (request, response, next) => {
 });
 
 app.post("/api/posts", async (request, response, next) => {
-  const post = request.body;
-  if (!post.title) {
+  const {title,content,imgSrc,userId} = request.body;
+
+  const user = await User.findById(userId)
+  if (!title) {
     return response.status(400).json({
       error: 'required "title" field is missing',
     });
   }
+
   const newPost = new Post({
-    title: post.title,
-    content: post.content,
+    title: title,
+    content: content,
+    imgSrc,
+    user: user._id,
     date: new Date(),
   });
   // newPost.save().then((savedPost) => {
@@ -74,6 +80,10 @@ app.post("/api/posts", async (request, response, next) => {
   // }).catch(err => next(err))
   try {
     const savedPost = await newPost.save()
+    
+    user.posts = user.posts.concat(savedPost._id)
+    await user.save()
+
     response.json(savedPost)
   } catch(e){
     next(e);
