@@ -1,55 +1,70 @@
 const postsRouter = require('express').Router()
 const Post = require("../models/Post");
 const User = require('../models/User');
-
+const jwt = require('jsonwebtoken')
 
 postsRouter.get("/", async (request, response) => {
-    const posts = await Post.find({}).populate('user', {
-        username: 1, name: 1, _id: 0
-    })
-    response.json(posts);
+  const posts = await Post.find({}).populate('user', {
+    username: 1, name: 1, _id: 0
+  })
+  response.json(posts);
 });
 
 postsRouter.get("/:id", (request, response, next) => {
-    const { id } = request.params;
-    // const post = posts.find(note => note.id === id)
-    Post.findById(id)
-        .then((post) => {
-            return post ? response.json(post) : response.status(404).end()
-        })
-        .catch((err) => {
-            console.log(err);
-            next(err);
-        });
+  const { id } = request.params;
+  // const post = posts.find(note => note.id === id)
+  Post.findById(id)
+    .then((post) => {
+      return post ? response.json(post) : response.status(404).end()
+    })
+    .catch((err) => {
+      console.log(err);
+      next(err);
+    });
 });
 
 postsRouter.delete("/:id", async (request, response, next) => {
-    const { id } = request.params;
-    Post.findByIdAndDelete(id)
-        .then(() => response.status(204).end())
-        .catch(next)
+  const { id } = request.params;
+  Post.findByIdAndDelete(id)
+    .then(() => response.status(204).end())
+    .catch(next)
 });
 
 postsRouter.put("/:id", (request, response, next) => {
-    const { id } = request.params;
-    const post = request.body
-    const newPostInfo = {
-        title: post.title,
-        content: post.content,
-        imgSrc: post.imgSrc,
-    };
+  const { id } = request.params;
+  const post = request.body
+  const newPostInfo = {
+    title: post.title,
+    content: post.content,
+    imgSrc: post.imgSrc,
+  };
 
-    Post.findByIdAndUpdate(id, newPostInfo, { new: true })
-        .then(result => {
-            response.status(200).json(result);
-        })
-        .catch(error => next(error));
+  Post.findByIdAndUpdate(id, newPostInfo, { new: true })
+    .then(result => {
+      response.status(200).json(result);
+    })
+    .catch(error => next(error));
 
 });
 
 postsRouter.post("/", async (request, response, next) => {
-  const { title, content, imgSrc, userId } = request.body;
+  const { title, content, imgSrc } = request.body;
+  const authorization = request.get('authorization')
+  let token = null
+  if (authorization && authorization.toLocaleLowerCase().startsWith('bearer')) {
+    token = authorization.substring(7)
+  }
 
+  let decodedToken = {}
+  try {
+    decodedToken = jwt.verify(token, process.env.SECRET)
+  } catch (e) {
+    next(e)
+  }
+  // if (!token || !decodedToken.id) {
+  //   return response.status(401).json({ error: 'token missing or invalid' })
+  // }
+  const { id: userId } = decodedToken
   const user = await User.findById(userId)
   if (!title) {
     return response.status(400).json({
@@ -57,26 +72,27 @@ postsRouter.post("/", async (request, response, next) => {
     });
   }
 
-  const newPost = new Post({
-    title: title,
-    content: content,
-    imgSrc,
-    user: user._id,
-    date: new Date(),
-  });
-  // newPost.save().then((savedPost) => {
-  //   response.json(savedPost);
-  // }).catch(err => next(err))
-  try {
-    const savedPost = await newPost.save()
-
-    user.posts = user.posts.concat(savedPost._id)
-    await user.save()
-
-    response.json(savedPost)
-  } catch (e) {
-    next(e);
-  }
+  if(user){
+    const newPost = new Post({
+      title: title,
+      content: content,
+      imgSrc,
+      user: user._id,
+      date: new Date(),
+    });
+    // newPost.save().then((savedPost) => {
+    //   response.json(savedPost);
+    // }).catch(err => next(err))
+    try {
+      const savedPost = await newPost.save()
+      user.posts = user.posts.concat(savedPost._id)
+      await user.save()
+  
+      response.json(savedPost)
+    } catch (e) {
+      next(e);
+    }
+  } 
 });
 
 module.exports = postsRouter
