@@ -1,7 +1,7 @@
 const postsRouter = require('express').Router()
 const Post = require("../models/Post");
 const User = require('../models/User');
-const jwt = require('jsonwebtoken')
+const userExtractor = require('../middleware/userExtractor')
 
 postsRouter.get("/", async (request, response) => {
   const posts = await Post.find({}).populate('user', {
@@ -23,14 +23,14 @@ postsRouter.get("/:id", (request, response, next) => {
     });
 });
 
-postsRouter.delete("/:id", async (request, response, next) => {
+postsRouter.delete("/:id", userExtractor, async (request, response, next) => {
   const { id } = request.params;
   Post.findByIdAndDelete(id)
     .then(() => response.status(204).end())
     .catch(next)
 });
 
-postsRouter.put("/:id", (request, response, next) => {
+postsRouter.put("/:id", userExtractor, (request, response, next) => {
   const { id } = request.params;
   const post = request.body
   const newPostInfo = {
@@ -47,24 +47,10 @@ postsRouter.put("/:id", (request, response, next) => {
 
 });
 
-postsRouter.post("/", async (request, response, next) => {
+postsRouter.post("/", userExtractor, async (request, response, next) => {
   const { title, content, imgSrc } = request.body;
-  const authorization = request.get('authorization')
-  let token = null
-  if (authorization && authorization.toLocaleLowerCase().startsWith('bearer')) {
-    token = authorization.substring(7)
-  }
 
-  let decodedToken = {}
-  try {
-    decodedToken = jwt.verify(token, process.env.SECRET)
-  } catch (e) {
-    next(e)
-  }
-  // if (!token || !decodedToken.id) {
-  //   return response.status(401).json({ error: 'token missing or invalid' })
-  // }
-  const { id: userId } = decodedToken
+  const { userId } = request
   const user = await User.findById(userId)
   if (!title) {
     return response.status(400).json({
@@ -72,7 +58,7 @@ postsRouter.post("/", async (request, response, next) => {
     });
   }
 
-  if(user){
+  if (user) {
     const newPost = new Post({
       title: title,
       content: content,
@@ -80,19 +66,17 @@ postsRouter.post("/", async (request, response, next) => {
       user: user._id,
       date: new Date(),
     });
-    // newPost.save().then((savedPost) => {
-    //   response.json(savedPost);
-    // }).catch(err => next(err))
+
     try {
       const savedPost = await newPost.save()
       user.posts = user.posts.concat(savedPost._id)
       await user.save()
-  
+
       response.json(savedPost)
     } catch (e) {
       next(e);
     }
-  } 
+  }
 });
 
 module.exports = postsRouter
