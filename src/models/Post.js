@@ -4,7 +4,6 @@ const postSchema = new Schema({
     title: String,
     content: String,
     date: Date,
-    imgSrc: String,
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User'
