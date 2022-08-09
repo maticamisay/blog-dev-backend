@@ -3,7 +3,7 @@ require("./mongo");
 
 const express = require("express");
 const cors = require("cors");
-
+const myParser = require("body-parser");
 const app = express();
 
 const notFound = require('./middleware/notFound.js')
@@ -12,6 +12,9 @@ const usersRouter = require('./controllers/users')
 const postsRouter = require('./controllers/posts')
 const loginRouter = require('./controllers/login')
 
+app.use(myParser.json({limit: '5mb'}));
+app.use(myParser.urlencoded({limit: '5mb', extended: true}));
+app.use(myParser.text({ limit: '5mb' }));
 
 app.use(cors());
 app.use(express.json());
