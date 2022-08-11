@@ -47,7 +47,7 @@ postsRouter.put("/:id", userExtractor, (request, response, next) => {
 });
 
 postsRouter.post("/", userExtractor, async (request, response, next) => {
-  const { title, content } = request.body;
+  const { title, imgSrc, content } = request.body;
 
   const { userId } = request
   const user = await User.findById(userId)
@@ -60,6 +60,7 @@ postsRouter.post("/", userExtractor, async (request, response, next) => {
   if (user) {
     const newPost = new Post({
       title: title,
+      imgSrc: imgSrc,
       content: content,
       user: user._id,
       date: new Date(),
